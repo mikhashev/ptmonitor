@@ -1,15 +1,25 @@
 
-import openapi_client
+from openapi_client import openapi
+
+
+def authenticate():
+    """
+    get token locate locally and connect to api
+    :return: client
+    """
+
+    with open('my_ti_token.txt', "r") as file:
+        token = file.read()
+    client = openapi.api_client(token)
 
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+    return client
+
 
 
 
 if __name__ == '__main__':
-    print_hi('PyCharm')
 
+    authenticate()
 
