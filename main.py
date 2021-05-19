@@ -1,7 +1,8 @@
 
 from openapi_client import openapi
 
-
+import datetime
+from time import sleep
 
 def get_token():
     """
@@ -70,7 +71,7 @@ def get_figi_by_ticker(ticker) -> str:
     figi = figi_data.figi
     return figi
 
-def get_orderbook(ticker = str("MAIL"), depth = int(900)):
+def get_orderbook(ticker = str("VTBR"), depth = int(900)):
 
 
 
@@ -85,22 +86,22 @@ def get_orderbook(ticker = str("MAIL"), depth = int(900)):
     bids_quantity_total = int()
 
 
-    print(len(orderbook_data.asks))
+    print("Asks:", len(orderbook_data.asks))
     print(orderbook_data.asks)
 
-
+    # todo use lots size  to calculate price?
     for ask_bid in orderbook_data.asks:
 
         asks_quantity_total += ask_bid.quantity
-        asks_price_total += ask_bid.price * ask_bid.quantity
+        asks_price_total += ask_bid.price * float(ask_bid.quantity)
 
-    print(len(orderbook_data.bids))
+    print("Bids:", len(orderbook_data.bids))
     print(orderbook_data.bids)
 
     for bid in orderbook_data.bids:
 
         bids_quantity_total += bid.quantity
-        bids_price_total += bid.price * bid.quantity
+        bids_price_total += bid.price * float(bid.quantity)
 
     # 'close_price': 15313.0,
     # 'depth': 900,
@@ -111,6 +112,8 @@ def get_orderbook(ticker = str("MAIL"), depth = int(900)):
     # 'limit_up': 16418.5,
     # 'min_price_increment': 0.5,
     # 'trade_status': 'NormalTrading'}
+
+    #print(orderbook_data)
 
     print('\nclose_price: ',orderbook_data.close_price)
     print('last_price: ', orderbook_data.last_price)
@@ -123,7 +126,56 @@ def get_orderbook(ticker = str("MAIL"), depth = int(900)):
 
     print("bids_price_total:", bids_price_total)
     print("bids_quantity_total:", bids_quantity_total)
+
+def get_ticker_price(ticker):
+    """
+    This function get data from api and return ticker price
+    return current price of the ticker
+
+    {'c': 288.21,
+     'figi': 'BBG004730N88',
+     'h': 288.21,
+     'interval': '1min',
+     'l': 288.12,
+     'o': 288.18,
+     'time': datetime.datetime(2021, 4, 21, 14, 40, tzinfo=tzutc()),
+     'v': 3040}
+    """
+
+    figi = get_figi_by_ticker(ticker)
+
+    now = datetime.datetime.utcnow()
+    created_at = now - datetime.timedelta(minutes=2)
+    current_time = now.isoformat("T", timespec="seconds") + "Z"
+    minute_before = created_at.isoformat("T", timespec="seconds") + "Z"
+
+    interval = "1min"
+
+    candles_data = (client.market.market_candles_get(figi=figi, _from=minute_before, to=current_time, interval=interval))
+
+    #print(candles_data)
+    # need to get last minute close ticker price
+    #
+    # if len(candles_data.payload.candles) != 0:
+    #     average_price = [True, round((candles_data.payload.candles[0].h + candles_data.payload.candles[0].l) / 2, 3)]
+    #
+    #     return average_price
+    # else:
+    #     return [False, 0]
+
+
 #print(client.market.market_stocks_get())
 
 #print(client.market.market_search_by_ticker_get("BANE"))
-get_orderbook()
+get_orderbook("MAIL", 900)
+get_ticker_price("MAIL")
+
+count = 0
+while True:
+    sleep(.25) # for /market 240 requests/ per 1 minute
+
+    #get_ticker_price("LKOH")
+    get_orderbook("GAZP", 2000)
+
+    count += 1
+    print("Count: ", count)
